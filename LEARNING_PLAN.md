@@ -11,22 +11,23 @@
 - JSON-LD の `@context`, `@id`, `@type` の役割を説明できる
 - 小さな業務ドメインを JSON-LD として表現できる
 - JSON-LD から NetworkX の有向グラフを作れる
-- 顧客、製品、依存関係、後継関係などをグラフとして検索できる
+- 機械装置、構成ユニット、交換部品、保全作業、後継部品などをグラフとして検索できる
 - グラフ操作の結果を JSON-LD へ戻す方針を説明できる
 - 必要に応じて RDFLib や SPARQL に進む判断ができる
 
 ## Project Theme
 
-当面の題材は、現在の `main.py` に合わせて次のような小さな業務ドメインにします。
+当面の題材は、製造業の機械装置管理に合わせて次のような小さな業務ドメインにします。
 
-- Customer: 顧客
-- Product: 製品、API、サービス
-- Plan: 契約プラン
+- Equipment: 機械装置
+- Component: 構成ユニット、主要部品
+- Part: 交換部品、消耗部品
+- MaintenanceTask: 点検、保全作業
 - Relation:
-  - customer uses product
-  - product superseded_by product
-  - product depends_on product
-  - customer has_plan plan
+  - equipment has_component component
+  - component uses_part part
+  - part superseded_by part
+  - equipment requires_maintenance maintenance_task
 
 この規模なら、JSON-LD の構文、グラフ構造、クエリの考え方を一通り練習できます。
 
@@ -39,9 +40,9 @@
 - `main.py` のノード ID と属性を整理する
 - `add_data()` を小さなサンプルデータ作成関数として保つ
 - クエリ関数を 3 つ追加する
-  - 指定製品を使っている顧客を取得する
-  - deprecated な製品を取得する
-  - deprecated 製品を使っている顧客を取得する
+  - 指定部品を使っている機械装置を取得する
+  - discontinued な部品を取得する
+  - discontinued 部品を使っている機械装置を取得する
 - `print()` の結果を見て、どのノードとエッジがたどられているか確認する
 
 完了条件:
@@ -66,17 +67,17 @@
 {
   "nodes": [
     {
-      "id": "product:api-v1",
-      "type": "Product",
-      "name": "API v1",
-      "status": "deprecated"
+      "id": "part:hydraulic-valve-a",
+      "type": "Part",
+      "name": "Hydraulic Valve A",
+      "status": "discontinued"
     }
   ],
   "edges": [
     {
-      "source": "customer:acme-corp",
-      "target": "product:api-v1",
-      "relation": "uses"
+      "source": "component:hydraulic-unit",
+      "target": "part:hydraulic-valve-a",
+      "relation": "uses_part"
     }
   ]
 }
@@ -105,10 +106,15 @@
 {
   "@context": {
     "kg": "https://example.com/kg/",
-    "Product": "kg:Product",
-    "Customer": "kg:Customer",
-    "uses": {
-      "@id": "kg:uses",
+    "Equipment": "kg:Equipment",
+    "Component": "kg:Component",
+    "Part": "kg:Part",
+    "hasComponent": {
+      "@id": "kg:hasComponent",
+      "@type": "@id"
+    },
+    "usesPart": {
+      "@id": "kg:usesPart",
       "@type": "@id"
     },
     "supersededBy": {
@@ -117,22 +123,33 @@
     },
     "name": "kg:name",
     "status": "kg:status",
-    "plan": "kg:plan"
+    "location": "kg:location"
   },
   "@graph": [
     {
-      "@id": "product:api-v1",
-      "@type": "Product",
-      "name": "API v1",
-      "status": "deprecated"
+      "@id": "part:hydraulic-valve-a",
+      "@type": "Part",
+      "name": "Hydraulic Valve A",
+      "status": "discontinued",
+      "supersededBy": {
+        "@id": "part:hydraulic-valve-b"
+      }
     },
     {
-      "@id": "customer:acme-corp",
-      "@type": "Customer",
-      "name": "Acme Corp",
-      "plan": "enterprise",
-      "uses": {
-        "@id": "product:api-v1"
+      "@id": "component:hydraulic-unit",
+      "@type": "Component",
+      "name": "Hydraulic Unit",
+      "usesPart": {
+        "@id": "part:hydraulic-valve-a"
+      }
+    },
+    {
+      "@id": "equipment:press-01",
+      "@type": "Equipment",
+      "name": "Press Machine 01",
+      "location": "line-a",
+      "hasComponent": {
+        "@id": "component:hydraulic-unit"
       }
     }
   ]
@@ -164,7 +181,7 @@
 
 完了条件:
 
-- `uses` と `supersededBy` を edge として読み込める
+- `hasComponent`, `usesPart`, `supersededBy` を edge として読み込める
 - ノード属性とエッジ属性を `print()` で確認できる
 
 ## Phase 5: Graph Queries
@@ -173,16 +190,16 @@
 
 実装するクエリ候補:
 
-- `get_customers_using_product(graph, product_id)`
-- `get_deprecated_products(graph)`
-- `get_customers_using_deprecated_products(graph)`
-- `get_successor_product(graph, product_id)`
-- `get_migration_targets_for_customer(graph, customer_id)`
-- `get_products_reachable_from_customer(graph, customer_id)`
+- `get_equipment_using_part(graph, part_id)`
+- `get_discontinued_parts(graph)`
+- `get_equipment_using_discontinued_parts(graph)`
+- `get_successor_part(graph, part_id)`
+- `get_replacement_parts_for_equipment(graph, equipment_id)`
+- `get_parts_reachable_from_equipment(graph, equipment_id)`
 
 完了条件:
 
-- 顧客から利用製品、deprecated 製品、後継製品をたどれる
+- 機械装置から構成ユニット、利用部品、discontinued 部品、後継部品をたどれる
 - edge の relation を条件にして検索できる
 
 ## Phase 6: Tests
@@ -198,10 +215,10 @@
 
 テスト例:
 
-- Acme Corp は API v1 を使っている
-- API v1 は deprecated である
-- API v1 の後継は API v2 である
-- deprecated 製品を使っている顧客として Acme Corp が返る
+- Press Machine 01 は Hydraulic Valve A を間接的に使っている
+- Hydraulic Valve A は discontinued である
+- Hydraulic Valve A の後継は Hydraulic Valve B である
+- discontinued 部品を使っている機械装置として Press Machine 01 が返る
 
 完了条件:
 

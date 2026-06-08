@@ -28,7 +28,7 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 4. 関係に意味や状態があるか
 5. どの情報はノード属性で十分か
 6. 将来、別のデータと接続するときに ID は安定しているか
-7. 語彙の意味を人や機械が共有する必要があるか
+7. 語彙の意味を人やシステムが共有する必要があるか
 
 オントロジーは、最初の 1 行目から完璧に作るものではありません。最初はノード種別、エッジ種別、属性名を素直に設計し、語彙の意味や制約を共有したくなった段階で、軽量なオントロジーとして整理します。
 
@@ -45,11 +45,11 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 このプロジェクトの例:
 
-- どの顧客が deprecated な API を使っているか
-- ある製品の後継製品は何か
-- ある顧客が移行すべき製品は何か
-- ある製品に依存している製品は何か
-- enterprise plan の顧客が使っている製品は何か
+- どの機械装置が discontinued な部品を使っているか
+- ある部品の後継部品は何か
+- ある機械装置で交換対象になる部品は何か
+- ある構成ユニットが使っている交換部品は何か
+- ある保全作業の対象になる機械装置は何か
 
 完了条件:
 
@@ -79,11 +79,12 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 | Candidate | Node or Attribute | Reason |
 | --- | --- | --- |
-| Customer | Node | 製品、契約、問い合わせ履歴など複数の関係を持つ |
-| Product | Node | 顧客利用、依存、後継関係の起点や終点になる |
-| Plan | Node or Attribute | plan 自体に価格、権限、制約を持たせるなら Node |
-| Product status | Attribute | まずは `stable` や `deprecated` の値で十分 |
-| Region | Node or Attribute | 地域別影響調査をするなら Node |
+| Equipment | Node | 構成ユニット、設置場所、保全作業など複数の関係を持つ |
+| Component | Node | 装置と交換部品の中間にあり、影響範囲分析の起点になる |
+| Part | Node | 廃番、後継、互換品などの関係を持つ |
+| MaintenanceTask | Node or Attribute | 作業手順、周期、対象装置を管理するなら Node |
+| Part status | Attribute | まずは `available` や `discontinued` の値で十分 |
+| Location | Node or Attribute | 工場、ライン、工程別に影響調査をするなら Node |
 
 やること:
 
@@ -94,7 +95,7 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 完了条件:
 
-- `Customer`, `Product`, `Plan` などのノード種別が定義されている
+- `Equipment`, `Component`, `Part`, `MaintenanceTask` などのノード種別が定義されている
 - 「なぜこれはノードなのか」を説明できる
 
 ## Phase 3: Edge Design
@@ -115,16 +116,16 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 | Relation | From | To | Meaning |
 | --- | --- | --- | --- |
-| `uses` | Customer | Product | 顧客が製品を利用している |
-| `has_plan` | Customer | Plan | 顧客が契約プランを持つ |
-| `superseded_by` | Product | Product | 古い製品が新しい製品に置き換えられる |
-| `depends_on` | Product | Product | 製品が別の製品に依存する |
+| `has_component` | Equipment | Component | 機械装置が構成ユニットを持つ |
+| `uses_part` | Component | Part | 構成ユニットが交換部品を使う |
+| `superseded_by` | Part | Part | 古い部品が後継部品に置き換えられる |
+| `requires_maintenance` | Equipment | MaintenanceTask | 機械装置が保全作業を必要とする |
 
 向きの考え方:
 
 - 質問文で自然にたどる方向を優先する
-- `customer -> product` は「顧客から利用製品を探す」時に自然
-- `old product -> new product` は「移行先を探す」時に自然
+- `equipment -> component -> part` は「装置から利用部品を探す」時に自然
+- `old part -> new part` は「交換先や後継部品を探す」時に自然
 - 逆向き検索が必要でも、NetworkX では predecessor を使えばよいので、最初から両方向エッジを持たなくてよい
 
 やること:
@@ -169,11 +170,11 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 ```json
 {
-  "source": "customer:acme-corp",
-  "target": "product:api-v1",
-  "relation": "uses",
+  "source": "component:hydraulic-unit",
+  "target": "part:hydraulic-valve-a",
+  "relation": "uses_part",
   "since": "2024-04-01",
-  "source_system": "billing"
+  "source_system": "bom"
 }
 ```
 
@@ -204,10 +205,11 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 このプロジェクトの例:
 
 ```text
-customer:acme-corp
-product:api-v1
-product:api-v2
-plan:enterprise
+equipment:press-01
+component:hydraulic-unit
+part:hydraulic-valve-a
+part:hydraulic-valve-b
+maintenance:hydraulic-inspection
 ```
 
 検討すること:
@@ -240,23 +242,24 @@ plan:enterprise
 {
   "@context": {
     "kg": "https://example.com/kg/",
-    "Customer": "kg:Customer",
-    "Product": "kg:Product",
-    "Plan": "kg:Plan",
-    "uses": {
-      "@id": "kg:uses",
+    "Equipment": "kg:Equipment",
+    "Component": "kg:Component",
+    "Part": "kg:Part",
+    "MaintenanceTask": "kg:MaintenanceTask",
+    "hasComponent": {
+      "@id": "kg:hasComponent",
       "@type": "@id"
     },
-    "hasPlan": {
-      "@id": "kg:hasPlan",
+    "usesPart": {
+      "@id": "kg:usesPart",
       "@type": "@id"
     },
     "supersededBy": {
       "@id": "kg:supersededBy",
       "@type": "@id"
     },
-    "dependsOn": {
-      "@id": "kg:dependsOn",
+    "requiresMaintenance": {
+      "@id": "kg:requiresMaintenance",
       "@type": "@id"
     },
     "name": "kg:name",
@@ -277,11 +280,11 @@ plan:enterprise
 オントロジーを考え始めるタイミング:
 
 - 同じ言葉を複数人が別の意味で使い始めた
-- `Product`, `Service`, `API`, `Plan` などの分類の境界が曖昧になった
+- `Equipment`, `Machine`, `Component`, `Part`, `SparePart` などの分類の境界が曖昧になった
 - relation の From/To の型を明文化したくなった
 - データ品質チェックを人間のメモではなくルールとして扱いたくなった
 - 外部語彙や別システムのデータと接続したくなった
-- 「これは Product の一種か」「この relation は推論できるか」という問いが出てきた
+- 「これは Part の一種か」「この relation は推論できるか」という問いが出てきた
 - SPARQL や RDFLib に進む前に、語彙の意味を固定したくなった
 
 最初に考えること:
@@ -297,32 +300,33 @@ plan:enterprise
 
 | Term | Kind | Meaning |
 | --- | --- | --- |
-| `Customer` | Class | 製品や契約を持つ顧客 |
-| `Product` | Class | 顧客が利用する製品、API、サービス |
-| `Plan` | Class | 顧客の契約プラン |
-| `uses` | Object Property | Customer から Product への利用関係 |
-| `has_plan` | Object Property | Customer から Plan への契約関係 |
-| `superseded_by` | Object Property | 古い Product から後継 Product への関係 |
-| `depends_on` | Object Property | Product から依存先 Product への関係 |
-| `status` | Data Property | Product などの状態 |
+| `Equipment` | Class | 工場やラインに設置された機械装置 |
+| `Component` | Class | 機械装置を構成する主要ユニット |
+| `Part` | Class | 交換、廃番、後継管理の対象になる部品 |
+| `MaintenanceTask` | Class | 点検、交換、調整などの保全作業 |
+| `has_component` | Object Property | Equipment から Component への構成関係 |
+| `uses_part` | Object Property | Component から Part への利用関係 |
+| `superseded_by` | Object Property | 古い Part から後継 Part への関係 |
+| `requires_maintenance` | Object Property | Equipment から MaintenanceTask への関係 |
+| `status` | Data Property | Part などの状態 |
 | `name` | Data Property | 表示名 |
 
 domain/range の例:
 
 | Property | Domain | Range |
 | --- | --- | --- |
-| `uses` | `Customer` | `Product` |
-| `has_plan` | `Customer` | `Plan` |
-| `superseded_by` | `Product` | `Product` |
-| `depends_on` | `Product` | `Product` |
-| `status` | `Product` | string |
+| `has_component` | `Equipment` | `Component` |
+| `uses_part` | `Component` | `Part` |
+| `superseded_by` | `Part` | `Part` |
+| `requires_maintenance` | `Equipment` | `MaintenanceTask` |
+| `status` | `Part` | string |
 
 考え方:
 
 - まずは RDFS/OWL を完全に学ぶより、class と property の意味を表にする
 - オントロジーは「正しい世界の模型」ではなく、この KG で共有する語彙の契約として扱う
 - 推論を使わない段階でも、domain/range は validation や設計レビューに役立つ
-- `Plan` を属性にするか class にするかのような判断は、ontology table に理由を残す
+- `MaintenanceTask` を属性にするか class にするかのような判断は、ontology table に理由を残す
 - 外部標準語彙を使うのは、独自語彙で小さく動かしてからでよい
 
 やること:
@@ -347,9 +351,10 @@ domain/range の例:
 チェック例:
 
 - すべてのノードに `id`, `type`, `name` がある
-- `uses` は Customer から Product に向いている
-- `superseded_by` は Product から Product に向いている
-- deprecated な Product には `superseded_by` がある
+- `has_component` は Equipment から Component に向いている
+- `uses_part` は Component から Part に向いている
+- `superseded_by` は Part から Part に向いている
+- discontinued な Part には `superseded_by` がある
 - 存在しないノードへの edge がない
 - relation 名が定義済み一覧に含まれている
 - relation の From/To が ontology の domain/range と合っている
@@ -381,9 +386,9 @@ domain/range の例:
 
 | Question | Traversal | Design Check |
 | --- | --- | --- |
-| deprecated 製品を使う顧客は誰か | Customer -uses-> Product(status=deprecated) | `uses` と `status` で答えられる |
-| 顧客の移行先は何か | Customer -uses-> Product -superseded_by-> Product | `superseded_by` の向きが重要 |
-| 製品停止の影響範囲は何か | Product <-uses- Customer | 逆向き探索が必要 |
+| discontinued 部品を使う機械装置はどれか | Equipment -has_component-> Component -uses_part-> Part(status=discontinued) | `has_component`, `uses_part`, `status` で答えられる |
+| 装置で交換すべき後継部品は何か | Equipment -has_component-> Component -uses_part-> Part -superseded_by-> Part | `superseded_by` の向きが重要 |
+| 部品廃番の影響範囲は何か | Part <-uses_part- Component <-has_component- Equipment | 逆向き探索が必要 |
 
 完了条件:
 
@@ -397,19 +402,19 @@ domain/range の例:
 考えること:
 
 - relation 名を変えたくなったときの移行方法
-- Product の version を ID に含めるか属性にするか
-- deprecated や retired など status 値の一覧
-- Plan が属性からノードに昇格するタイミング
+- Part の revision や model を ID に含めるか属性にするか
+- available, discontinued, obsolete など status 値の一覧
+- MaintenanceTask が属性からノードに昇格するタイミング
 - イベントや履歴を扱うための中間ノード導入
 - class hierarchy や property hierarchy を導入するタイミング
 
 中間ノードが必要になる例:
 
 ```text
-customer:acme-corp -> usage:acme-api-v1-2024 -> product:api-v1
+equipment:press-01 -> installation:press-01-valve-a-2024 -> part:hydraulic-valve-a
 ```
 
-`usage` ノードを置くと、利用期間、契約、根拠、利用量などを関係そのものに詳しく持たせやすくなります。
+`installation` ノードを置くと、取付日、交換日、ロット番号、根拠、保全履歴などを関係そのものに詳しく持たせやすくなります。
 
 完了条件:
 

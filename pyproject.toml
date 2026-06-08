@@ -1,0 +1,46 @@
+[project]
+name = "kg-intro"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "emguse", email = "third_beyond_qmv440@002.bunsin.io" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "networkx>=3.6.1",
+]
+
+[project.scripts]
+kg-intro = "kg_intro:main"
+
+[build-system]
+requires = ["uv_build>=0.11.17,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py314"
+preview = true
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I"]
+ignore = []
+
+fixable = ["ALL"]
+unfixable = ["F401"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 5
+
+[tool.ruff.isort]
+force-single-line = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+

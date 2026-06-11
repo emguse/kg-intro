@@ -62,6 +62,10 @@ Knowledge Graph は「データをグラフっぽく保存するもの」では�
 
 この学習で扱う `Equipment -> Component -> Part -> successor Part` の構造は、単なるサンプルではありません。製造業の多くの現場にある「装置、部品、履歴、図面、作業、担当、リスクが別々の台帳にある」という問題を、関係としてつなぐ練習になります。
 
+より実務寄りの発展例として、E-BOM、M-BOM、製作番号でフリーズした S-BOM、サプライヤー、購買発注、ロットをつなぐ [BOM_TRACEABILITY_CASE.md](BOM_TRACEABILITY_CASE.md) も用意しています。
+
+「RDB で良いのではないか」という議論への整理は、[RDB_VS_KG_DECISION.md](RDB_VS_KG_DECISION.md) にまとめています。
+
 ### 持ち帰り先の例
 
 | Area | 役立てられそうなこと | KG でつなぐもの |

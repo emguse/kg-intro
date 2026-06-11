@@ -31,6 +31,8 @@
 
 この規模なら、JSON-LD の構文、グラフ構造、クエリの考え方を一通り練習できます。
 
+この事例を保全、予備品管理、調達、品質保証、生産技術、設計、FSE、テクニカルサポート、技術継承などに広げる考え方は、[KG_DESIGN_LEARNING_PLAN.md](KG_DESIGN_LEARNING_PLAN.md) の `Case Expansion: 持ち帰り先と活用イメージ` にまとめています。
+
 ## Phase 1: Current Graph Basics
 
 目的: まず NetworkX の有向グラフとして、ノードとエッジの扱いに慣れます。

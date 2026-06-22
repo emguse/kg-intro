@@ -1,6 +1,6 @@
 # JSON-LD Knowledge Graph Learning Plan
 
-このプロジェクトは、JSON-LD で表現した小規模な Knowledge Graph を Python で読み込み、NetworkX でグラフ操作するための習作です。最初から RDF や SPARQL を大きく扱うより、まずは JSON-LD の形、ノードとエッジの設計、基本的な探索を手で動かして理解することを重視します。
+このプロジェクトは、JSON-LD で表現した小規模な Knowledge Graph を Python で読み込み、NetworkX でグラフ操作するためのガイドです。最初から RDF や SPARQL を大きく扱うより、まずは JSON-LD の形、ノードとエッジの設計、基本的な探索を手で動かして理解することを重視します。
 
 新しく KG を作るためのノード設計、エッジ設計、語彙設計、ID 設計は、別建ての [KG_DESIGN_LEARNING_PLAN.md](KG_DESIGN_LEARNING_PLAN.md) にまとめています。このファイルは実装中心の学習プラン、設計プランは実装前に考えることの学習プランとして使います。
 
@@ -33,7 +33,7 @@
 
 この事例を保全、予備品管理、調達、品質保証、生産技術、設計、FSE、テクニカルサポート、技術継承などに広げる考え方は、[KG_DESIGN_LEARNING_PLAN.md](KG_DESIGN_LEARNING_PLAN.md) の `Case Expansion: 持ち帰り先と活用イメージ` にまとめています。
 
-E-BOM、M-BOM、製作番号でフリーズした S-BOM、サプライヤー、購買発注、ロットをつなぐ実例は [BOM_TRACEABILITY_CASE.md](BOM_TRACEABILITY_CASE.md) にまとめています。
+E-BOM、M-BOM、製作番号でフリーズした S-BOM、サプライヤー、購買発注、ロットをつなぐ例は [BOM_TRACEABILITY_CASE.md](BOM_TRACEABILITY_CASE.md) にまとめています。
 
 ## Phase 1: Current Graph Basics
 

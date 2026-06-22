@@ -1,10 +1,10 @@
 # BOM Traceability Case: E-BOM, M-BOM, S-BOM as JSON-LD
 
-このドキュメントは、製造業の機械装置を題材に、E-BOM、M-BOM、S-BOM を Knowledge Graph として設計する実例です。
+このドキュメントは、製造業の機械装置を題材に、E-BOM、M-BOM、S-BOM を Knowledge Graph として設計する例です。
 
-特に、製作番号ごとにフリーズされた S-BOM に、実際に購入したサプライヤー、購買発注、ロット、代替理由を持たせることで、設計、製造、調達、品質、FSE、テクニカルサポートを横断したトレーサビリティを扱えるようにします。
+特に、製作番号ごとにフリーズされた S-BOM に、実際に購入したサプライヤー、購買発注、ロット、代替理由を持たせることで、設計、製造、調達、品質、FSE、テクニカルサポートを横断したトレーサビリティを扱うことをイメージしています。
 
-RDB と KG の使い分けは [RDB_VS_KG_DECISION.md](RDB_VS_KG_DECISION.md) にまとめています。この実例では、RDB を正本、KG を横断探索と影響範囲分析の読み取りモデルとして扱う前提にします。
+RDB と KG の使い分けは [RDB_VS_KG_DECISION.md](RDB_VS_KG_DECISION.md) にまとめています。この例では、RDB を正本、KG を横断探索と影響範囲分析の読み取りモデルとして扱う前提にします。
 
 ## Scenario
 
@@ -81,7 +81,7 @@ KG に向いている理由:
 
 ## Design Point: S-BOM Line as a Node
 
-S-BOM 明細は、単なる `S-BOM -> Part` の edge ではなく、`BOMLine` ノードにするのが扱いやすいです。
+S-BOM 明細は、単なる `S-BOM -> Part` の edge ではなく、`BOMLine` ノードにするのが扱いやすいでしょう。
 
 理由:
 
